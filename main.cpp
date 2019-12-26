@@ -15,7 +15,7 @@ int line_counter = 0;
 int m_blockCounter = 0;
 int m_commandCounter = 0;
 
-
+/*
 void processBlock(const Block& block) {
     ++m_blockCounter;
     m_commandCounter += block.commandCount();
@@ -26,9 +26,31 @@ void printSatistic() {
               << "; command count: " << m_commandCounter
               << "; block count: " << m_blockCounter;
 }
+*/
+
+void process(std::shared_ptr<BlockWriter> &&writer, std::queue<Block> &queue)
+{
+    while ( !m_quit ){
+        std::unique_lock<std::mutex> lk(m_mutex);
+        m_conditionVariable.wait( lk, [&queue, this](){
+            return !queue.empty() || m_quit;
+        } );
+
+        if ( !queue.empty() ) {
+            auto block = queue.front();
+            queue.pop();
+            writer->write( block );
+            lk.unlock();
+        }
+    }
+}
+
 
 int main(int argc, char *argv[])
 {
+
+
+/*
     BlockBuilder blockBuilder;
     if (argc == 2) {
         int i;
@@ -39,7 +61,6 @@ int main(int argc, char *argv[])
 
         }
     }
-
 
     auto consoleWriter = make_shared<ConsoleWriter>("log");
     auto parallelFileWriter = make_shared<ParallelFileWriter>();
@@ -56,9 +77,7 @@ int main(int argc, char *argv[])
     blockBuilder.insertCommand( Command::CommandType::Eof );
 
     printSatistic();
-
-
-
+*/
     return 0;
 }
 
